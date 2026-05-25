@@ -1,0 +1,799 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Kuesioner Penelitian — Board Game PJOK Oryza Sativa N</title>
+<style>
+  :root {
+    --mat: #1A5276; --mat-l: #D6EAF8;
+    --med: #0F6E56; --med-l: #D5F5E3;
+    --guru: #784212; --guru-l: #FAE5D3;
+    --sis: #3C3489; --sis-l: #E8DAEF;
+    --red: #922B21; --bg: #F7F8FA;
+    --card: #fff; --border: #E0E3E8;
+    --text: #1B2631; --sub: #636974;
+    --radius: 12px;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
+
+  /* ── HEADER ── */
+  .app-header { background: var(--mat); color: #fff; padding: 18px 24px 14px; }
+  .app-header h1 { font-size: 17px; font-weight: 600; line-height: 1.3; }
+  .app-header p { font-size: 12px; opacity: .75; margin-top: 4px; }
+
+  /* ── NAV TABS ── */
+  .tabs { display: flex; background: #fff; border-bottom: 1px solid var(--border); overflow-x: auto; }
+  .tab { flex: none; padding: 12px 16px; font-size: 13px; font-weight: 500; cursor: pointer;
+         border-bottom: 3px solid transparent; color: var(--sub); white-space: nowrap; transition: .15s; }
+  .tab.active { border-bottom-color: var(--mat); color: var(--mat); }
+  .tab:hover:not(.active) { background: var(--bg); }
+  .tab[data-form="ahli_materi"] { color: var(--mat); }
+  .tab[data-form="ahli_materi"].active { border-bottom-color: var(--mat); }
+  .tab[data-form="ahli_media"] { color: var(--med); }
+  .tab[data-form="ahli_media"].active { border-bottom-color: var(--med); }
+  .tab[data-form="guru"] { color: var(--guru); }
+  .tab[data-form="guru"].active { border-bottom-color: var(--guru); }
+  .tab[data-form="siswa"] { color: var(--sis); }
+  .tab[data-form="siswa"].active { border-bottom-color: var(--sis); }
+  .tab[data-form="data_view"] { color: #555; }
+  .tab[data-form="data_view"].active { border-bottom-color: #555; }
+
+  /* ── MAIN ── */
+  .main { max-width: 780px; margin: 0 auto; padding: 20px 16px 60px; }
+  .form-panel { display: none; }
+  .form-panel.active { display: block; }
+
+  /* ── CARD ── */
+  .card { background: var(--card); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 16px; }
+  .card-title { font-size: 15px; font-weight: 600; margin-bottom: 4px; }
+  .card-sub { font-size: 12px; color: var(--sub); }
+
+  /* ── IDENTITY ── */
+  .id-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 14px; }
+  @media(max-width:520px){ .id-grid { grid-template-columns: 1fr; } }
+  label { font-size: 13px; font-weight: 500; display: block; margin-bottom: 5px; }
+  input, select, textarea {
+    width: 100%; border: 1px solid var(--border); border-radius: 8px;
+    padding: 9px 12px; font-size: 13px; font-family: inherit;
+    background: var(--bg); color: var(--text); transition: border .15s;
+  }
+  input:focus, select:focus, textarea:focus { outline: none; border-color: var(--mat); }
+
+  /* ── ASPECT HEADER ── */
+  .aspect-hdr { display: flex; align-items: center; gap: 10px;
+    padding: 10px 14px; border-radius: 8px; margin: 20px 0 10px; }
+  .aspect-hdr .asp-icon { font-size: 16px; }
+  .aspect-hdr .asp-name { font-size: 13px; font-weight: 600; }
+
+  /* ── QUESTION ROW ── */
+  .q-row { display: grid; grid-template-columns: 32px 1fr auto; gap: 10px;
+    align-items: start; padding: 10px 0; border-bottom: 1px solid var(--border); }
+  .q-row:last-child { border-bottom: none; }
+  .q-num { font-size: 12px; color: var(--sub); font-weight: 600; padding-top: 3px; }
+  .q-text { font-size: 13px; line-height: 1.55; }
+  .q-scale { display: flex; gap: 6px; }
+  .q-scale label {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; font-size: 11px; font-weight: 500; cursor: pointer;
+    color: var(--sub); margin: 0;
+  }
+  .q-scale input[type=radio] { width: 18px; height: 18px; cursor: pointer; accent-color: var(--mat); }
+  .scale-legend { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 14px; }
+  .sl-item { font-size: 11px; background: var(--bg); border: 1px solid var(--border);
+    border-radius: 20px; padding: 3px 10px; }
+
+  /* ── SUBMIT BUTTON ── */
+  .btn-submit { width: 100%; padding: 14px; border: none; border-radius: 10px;
+    font-size: 15px; font-weight: 600; color: #fff; cursor: pointer;
+    margin-top: 20px; transition: .15s; }
+  .btn-submit:hover { opacity: .9; transform: translateY(-1px); }
+  .btn-submit:active { transform: none; }
+
+  /* ── STATUS ── */
+  .status-box { border-radius: 10px; padding: 14px 16px; font-size: 13px;
+    margin-top: 14px; display: none; }
+  .status-box.success { background: #D5F5E3; color: #0F6E56; border: 1px solid #0F6E56; }
+  .status-box.error { background: var(--mat-l); color: var(--red); border: 1px solid var(--red); }
+
+  /* ── PROGRESS BAR ── */
+  .progress-wrap { margin: 14px 0 0; }
+  .progress-label { font-size: 12px; color: var(--sub); margin-bottom: 5px; }
+  .progress-bar { height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 3px; transition: width .3s; }
+
+  /* ── DATA VIEW ── */
+  .dv-filter { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 16px; align-items: center; }
+  .dv-filter select { width: auto; }
+  .btn-export { padding: 9px 18px; border: none; border-radius: 8px; background: var(--mat);
+    color: #fff; font-size: 13px; font-weight: 500; cursor: pointer; }
+  .btn-export:hover { opacity: .85; }
+  .btn-del { padding: 5px 10px; border: none; border-radius: 6px; background: var(--red);
+    color: #fff; font-size: 11px; cursor: pointer; }
+  .tbl-wrap { overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th { background: var(--mat); color: #fff; padding: 8px 10px; text-align: left; white-space: nowrap; }
+  td { padding: 7px 10px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  tr:hover td { background: var(--bg); }
+  .badge { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+  .b-mat { background: var(--mat-l); color: var(--mat); }
+  .b-med { background: var(--med-l); color: var(--med); }
+  .b-guru { background: var(--guru-l); color: var(--guru); }
+  .b-sis { background: var(--sis-l); color: var(--sis); }
+  .empty-state { text-align: center; color: var(--sub); padding: 40px 20px; font-size: 13px; }
+
+  /* ── SPSS GUIDE ── */
+  .spss-section { background: #F0F4FF; border: 1px solid #C5D0F0; border-radius: 10px;
+    padding: 14px 16px; margin-top: 16px; font-size: 12px; line-height: 1.7; }
+  .spss-section h4 { font-size: 13px; color: var(--mat); margin-bottom: 6px; }
+  code { background: #E8EDF8; border-radius: 4px; padding: 1px 6px; font-size: 11px; }
+
+  .loading { text-align: center; color: var(--sub); padding: 20px; font-size: 13px; }
+  .spinner { display: inline-block; width: 18px; height: 18px; border: 2px solid var(--border);
+    border-top-color: var(--mat); border-radius: 50%; animation: spin .6s linear infinite; margin-right: 8px; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* Config warning — dihapus dari frontend */
+</style>
+</head>
+<body>
+
+<!-- ══ HEADER ════════════════════════════════════════════════════ -->
+<div class="app-header">
+  <h1>📋 Kuesioner Penelitian — Pengembangan Board Game PJOK</h1>
+  <p>Oryza Sativa N · NIM 2506070044 · Magister Pendidikan Olahraga UNNES 2025/2026</p>
+</div>
+
+<!-- ══ TABS ═══════════════════════════════════════════════════════ -->
+<div class="tabs">
+  <div class="tab active" data-form="ahli_materi" onclick="switchTab('ahli_materi')">🔵 Ahli Materi</div>
+  <div class="tab" data-form="ahli_media" onclick="switchTab('ahli_media')">🟢 Ahli Media</div>
+  <div class="tab" data-form="guru" onclick="switchTab('guru')">🟤 Guru PJOK</div>
+  <div class="tab" data-form="siswa" onclick="switchTab('siswa')">🟣 Siswa</div>
+  <div class="tab" data-form="data_view" onclick="switchTab('data_view')">📊 Data & Ekspor</div>
+</div>
+
+<div class="main">
+
+<!-- ══════════════════════════════════════════════════════════════
+     INSTRUMEN 1 — AHLI MATERI
+════════════════════════════════════════════════════════════════ -->
+<div class="form-panel active" id="panel_ahli_materi">
+  <div class="card">
+    <div class="card-title" style="color:var(--mat)">Instrumen 1 — Lembar Validasi Ahli Materi</div>
+    <div class="card-sub">Validasi isi media board game gamifikasi gerak non-lokomotor · Skala 1–4</div>
+
+    <div class="id-grid">
+      <div><label>Nama Validator</label><input type="text" id="mat_nama" placeholder="Dr. ..."></div>
+      <div><label>Institusi / Jabatan</label><input type="text" id="mat_inst" placeholder="Universitas / Sekolah"></div>
+      <div><label>Tanggal Pengisian</label><input type="date" id="mat_tgl"></div>
+      <div><label>Peran Validator</label>
+        <select id="mat_peran">
+          <option value="">Pilih...</option>
+          <option>Dosen Bidang Pendidikan Jasmani</option>
+          <option>Guru PJOK Senior SD</option>
+        </select>
+      </div>
+    </div>
+    <div class="scale-legend" style="margin-top:14px">
+      <span class="sl-item">1 = Sangat Kurang Baik</span>
+      <span class="sl-item">2 = Kurang Baik</span>
+      <span class="sl-item">3 = Baik</span>
+      <span class="sl-item">4 = Sangat Baik</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="mat_progress_lbl">0 dari 26 butir diisi</div>
+      <div class="progress-bar"><div class="progress-fill" id="mat_progress_fill" style="width:0%;background:var(--mat)"></div></div>
+    </div>
+  </div>
+  <div id="mat_questions"></div>
+  <div class="card">
+    <label>Saran / Catatan Tambahan</label>
+    <textarea id="mat_saran" rows="3" placeholder="Tuliskan saran perbaikan media di sini..."></textarea>
+    <label style="margin-top:12px">Kesimpulan</label>
+    <select id="mat_kesimpulan">
+      <option value="">Pilih kesimpulan...</option>
+      <option value="1">Layak tanpa revisi</option>
+      <option value="2">Layak dengan revisi sesuai catatan</option>
+      <option value="3">Tidak layak — perlu perancangan ulang</option>
+    </select>
+  </div>
+  <button class="btn-submit" style="background:var(--mat)" onclick="submitForm('ahli_materi')">
+    💾 Kirim Data Validasi Ahli Materi
+  </button>
+  <div class="status-box" id="mat_status"></div>
+
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     INSTRUMEN 2 — AHLI MEDIA
+════════════════════════════════════════════════════════════════ -->
+<div class="form-panel" id="panel_ahli_media">
+  <div class="card">
+    <div class="card-title" style="color:var(--med)">Instrumen 2 — Lembar Validasi Ahli Media</div>
+    <div class="card-sub">Validasi desain, visual, gamifikasi, dan kemudahan penggunaan · Skala 1–4</div>
+    <div class="id-grid">
+      <div><label>Nama Validator</label><input type="text" id="med_nama" placeholder="Dr. ..."></div>
+      <div><label>Institusi / Jabatan</label><input type="text" id="med_inst" placeholder="Universitas / Lembaga"></div>
+      <div><label>Tanggal Pengisian</label><input type="date" id="med_tgl"></div>
+      <div><label>Validator ke-</label>
+        <select id="med_urutan">
+          <option value="">Pilih...</option>
+          <option value="1">Validator 1</option>
+          <option value="2">Validator 2</option>
+        </select>
+      </div>
+    </div>
+    <div class="scale-legend" style="margin-top:14px">
+      <span class="sl-item">1 = Sangat Kurang Baik</span>
+      <span class="sl-item">2 = Kurang Baik</span>
+      <span class="sl-item">3 = Baik</span>
+      <span class="sl-item">4 = Sangat Baik</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="med_progress_lbl">0 dari 28 butir diisi</div>
+      <div class="progress-bar"><div class="progress-fill" id="med_progress_fill" style="width:0%;background:var(--med)"></div></div>
+    </div>
+  </div>
+  <div id="med_questions"></div>
+  <div class="card">
+    <label>Saran / Catatan Tambahan</label>
+    <textarea id="med_saran" rows="3" placeholder="Tuliskan saran perbaikan desain media..."></textarea>
+    <label style="margin-top:12px">Kesimpulan</label>
+    <select id="med_kesimpulan">
+      <option value="">Pilih kesimpulan...</option>
+      <option value="1">Layak tanpa revisi</option>
+      <option value="2">Layak dengan revisi sesuai catatan</option>
+      <option value="3">Tidak layak — perlu perancangan ulang</option>
+    </select>
+  </div>
+  <button class="btn-submit" style="background:var(--med)" onclick="submitForm('ahli_media')">
+    💾 Kirim Data Validasi Ahli Media
+  </button>
+  <div class="status-box" id="med_status"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     INSTRUMEN 4 — GURU PJOK
+════════════════════════════════════════════════════════════════ -->
+<div class="form-panel" id="panel_guru">
+  <div class="card">
+    <div class="card-title" style="color:var(--guru)">Instrumen 4 — Angket Respons Guru PJOK</div>
+    <div class="card-sub">Kepraktisan media pembelajaran board game · Skala 1–4</div>
+    <div class="id-grid">
+      <div><label>Nama Guru</label><input type="text" id="guru_nama" placeholder="Nama lengkap"></div>
+      <div><label>Asal Sekolah</label><input type="text" id="guru_sek" placeholder="SD Negeri ..."></div>
+      <div><label>Tanggal</label><input type="date" id="guru_tgl"></div>
+      <div><label>Pengalaman Mengajar</label>
+        <select id="guru_pengalaman">
+          <option value="">Pilih...</option>
+          <option value="1">< 5 tahun</option>
+          <option value="2">5–10 tahun</option>
+          <option value="3">> 10 tahun</option>
+        </select>
+      </div>
+    </div>
+    <div class="scale-legend" style="margin-top:14px">
+      <span class="sl-item">1 = Sangat Tidak Setuju</span>
+      <span class="sl-item">2 = Tidak Setuju</span>
+      <span class="sl-item">3 = Setuju</span>
+      <span class="sl-item">4 = Sangat Setuju</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="guru_progress_lbl">0 dari 20 butir diisi</div>
+      <div class="progress-bar"><div class="progress-fill" id="guru_progress_fill" style="width:0%;background:var(--guru)"></div></div>
+    </div>
+  </div>
+  <div id="guru_questions"></div>
+  <div class="card">
+    <label>Kelebihan media yang dirasakan</label>
+    <textarea id="guru_kelebihan" rows="2" placeholder="..."></textarea>
+    <label style="margin-top:10px">Kendala selama implementasi</label>
+    <textarea id="guru_kendala" rows="2" placeholder="..."></textarea>
+    <label style="margin-top:10px">Saran perbaikan</label>
+    <textarea id="guru_saran" rows="2" placeholder="..."></textarea>
+  </div>
+  <button class="btn-submit" style="background:var(--guru)" onclick="submitForm('guru')">
+    💾 Kirim Respons Guru PJOK
+  </button>
+  <div class="status-box" id="guru_status"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     INSTRUMEN 3 — SISWA
+════════════════════════════════════════════════════════════════ -->
+<div class="form-panel" id="panel_siswa">
+  <div class="card">
+    <div class="card-title" style="color:var(--sis)">Instrumen 3 — Angket Respons Peserta Didik</div>
+    <div class="card-sub">Kepraktisan media dari sudut pandang siswa · Skala 1–4</div>
+    <div class="id-grid">
+      <div><label>Nama Siswa</label><input type="text" id="sis_nama" placeholder="Nama kamu"></div>
+      <div><label>Nomor Absen</label><input type="number" id="sis_absen" placeholder="1–40" min="1" max="99"></div>
+      <div><label>Asal Sekolah</label>
+        <select id="sis_sek">
+          <option value="">Pilih sekolah...</option>
+          <option>SDN Ulujami 06 Pagi</option>
+          <option>SD Pesanggrahan 1</option>
+          <option>SD Pesanggrahan 2</option>
+          <option>SD Pesanggrahan 3</option>
+          <option>SD Pesanggrahan 4</option>
+          <option>SD Pesanggrahan 5</option>
+        </select>
+      </div>
+      <div><label>Tanggal</label><input type="date" id="sis_tgl"></div>
+    </div>
+    <div class="scale-legend" style="margin-top:14px">
+      <span class="sl-item">1 = Tidak Setuju / Tidak Suka</span>
+      <span class="sl-item">2 = Kurang Setuju</span>
+      <span class="sl-item">3 = Setuju / Suka</span>
+      <span class="sl-item">4 = Sangat Setuju / Sangat Suka</span>
+    </div>
+    <div class="progress-wrap">
+      <div class="progress-label" id="sis_progress_lbl">0 dari 16 butir diisi</div>
+      <div class="progress-bar"><div class="progress-fill" id="sis_progress_fill" style="width:0%;background:var(--sis)"></div></div>
+    </div>
+  </div>
+  <div id="sis_questions"></div>
+  <div class="card">
+    <label>Bagian yang paling kamu suka dari permainan ini:</label>
+    <input type="text" id="sis_suka" placeholder="...">
+    <label style="margin-top:10px">Gerakan yang paling sulit kamu lakukan:</label>
+    <input type="text" id="sis_sulit" placeholder="...">
+  </div>
+  <button class="btn-submit" style="background:var(--sis)" onclick="submitForm('siswa')">
+    💾 Kirim Jawaban
+  </button>
+  <div class="status-box" id="sis_status"></div>
+</div>
+
+<!-- ══════════════════════════════════════════════════════════════
+     DATA VIEW
+════════════════════════════════════════════════════════════════ -->
+<div class="form-panel" id="panel_data_view">
+  <div class="card">
+    <div class="card-title">📊 Rekap Data & Ekspor SPSS</div>
+    <div class="card-sub">Data tersimpan lokal di browser (localStorage). Gunakan tombol Export untuk download CSV.</div>
+    <div class="dv-filter" style="margin-top:12px">
+      <label style="margin:0">Filter:</label>
+      <select id="dv_filter" onchange="renderDataView()">
+        <option value="all">Semua Form</option>
+        <option value="ahli_materi">Ahli Materi</option>
+        <option value="ahli_media">Ahli Media</option>
+        <option value="guru">Guru PJOK</option>
+        <option value="siswa">Siswa</option>
+      </select>
+      <button class="btn-export" onclick="exportCSV()">⬇ Export CSV untuk SPSS</button>
+      <button class="btn-export" style="background:#555" onclick="clearData()">🗑 Hapus Semua Data</button>
+    </div>
+    <div class="tbl-wrap" id="dv_table_wrap">
+      <div class="empty-state">Belum ada data tersimpan.</div>
+    </div>
+  </div>
+
+
+</div>
+
+</div><!-- /main -->
+
+<script>
+// ══════════════════════════════════════════════════════════════════
+// CONFIG — GANTI GAS_URL dengan URL deploy Google Apps Script Anda
+// ══════════════════════════════════════════════════════════════════
+const CONFIG = {
+  GAS_URL: 'https://script.google.com/macros/s/AKfycbxy5CoOcU26QraDgSPKvzIXzelkEt2dXTN8fMtGrkpErUEifH1Z0hE-SMePzMBbjHOkNw/exec', // URL diisi langsung di sini oleh peneliti
+  USE_LOCAL: true,
+};
+
+// ══════════════════════════════════════════════════════════════════
+// DATA INSTRUMEN
+// ══════════════════════════════════════════════════════════════════
+const INSTRUMENTS = {
+  ahli_materi: {
+    total: 26,
+    aspects: [
+      { label: 'A. Kesesuaian Materi dengan CP PJOK Fase B', color: '#1A5276', items: [
+        'Materi gerak non-lokomotor sesuai dengan CP PJOK Fase B (BSKAP 046/H/KR/2025)',
+        'Keenam jenis gerak non-lokomotor tercakup secara komprehensif dalam komponen media',
+        'Tujuan pembelajaran selaras dengan ATP PJOK Kelas IV Fase B Kurikulum Merdeka',
+        'Tingkat kesulitan materi pada kartu instruksi sesuai perkembangan motorik siswa Kelas IV SD',
+        'Muatan materi mendukung dua dimensi CP Fase B: refining dan applying gerak',
+      ]},
+      { label: 'B. Keakuratan Konsep Gerak Non-Lokomotor', color: '#1A5276', items: [
+        'Definisi dan konsep gerak non-lokomotor akurat sesuai referensi ilmiah yang sahih',
+        'Terminologi gerak (titik tumpu, sumbu gerak, keseimbangan statis/dinamis) tepat dan konsisten',
+        'Urutan penyajian materi mencerminkan hierarki belajar yang benar',
+        'Instruksi gerak tidak mengarahkan gerakan yang berpotensi menimbulkan risiko cedera',
+        'Ilustrasi visual merepresentasikan teknik gerak non-lokomotor yang benar secara biomekanis',
+      ]},
+      { label: 'C. Ketepatan Instruksi Gerak pada Kartu', color: '#1A5276', items: [
+        'Instruksi pada setiap kartu gerak memandu siswa melakukan gerakan dengan benar',
+        'Setiap kartu memuat informasi lengkap: nama, ilustrasi, deskripsi, tingkat kesulitan, dan poin',
+        'Bahasa instruksi singkat, jelas, dan mudah dipahami siswa Kelas IV SD secara mandiri',
+        'Tiga tingkat kesulitan kartu (hijau/kuning/merah) mencerminkan gradasi gerak yang terukur',
+      ]},
+      { label: 'D. Kesesuaian dengan Tujuan Instruksional', color: '#1A5276', items: [
+        'Konten memfasilitasi pencapaian ranah kognitif: mengenal dan membedakan gerak non-lokomotor',
+        'Konten memfasilitasi pencapaian ranah psikomotor: mempraktikkan keenam gerak non-lokomotor',
+        'Konten memfasilitasi pencapaian ranah afektif: sportivitas, kerja sama, menghargai teman',
+        'Mekanisme peer assessment memberikan umpan balik yang bermakna terhadap kualitas gerak',
+      ]},
+      { label: 'E. Kelengkapan Cakupan Materi', color: '#1A5276', items: [
+        'Setiap dari keenam gerak non-lokomotor direpresentasikan minimal dua kartu instruksi berbeda',
+        'Panduan memuat penjelasan prinsip dasar masing-masing gerakan',
+        'Materi mendukung deep learning: Joyful, Meaningful, dan Mindful Learning (BSKAP, 2025)',
+      ]},
+      { label: 'F. Validitas Soal Pretest-Posttest', color: '#1A5276', items: [
+        'Soal mencakup jenjang kognitif yang sesuai (C1 Mengingat, C2 Memahami, C3 Menerapkan, C4 Menganalisis)',
+        'Setiap butir soal mengukur pemahaman konsep gerak yang relevan dengan konten media',
+        'Kalimat soal jelas, tidak ambigu, dan dapat dipahami siswa Kelas IV SD',
+        'Kunci jawaban benar secara konseptual dan tidak dapat diperdebatkan',
+        'Tingkat kesukaran soal proporsional dan sesuai kemampuan kognitif siswa Fase B',
+        'Pilihan jawaban (distraktor) masuk akal dan mengukur pemahaman yang sesungguhnya',
+      ]},
+    ]
+  },
+  ahli_media: {
+    total: 28,
+    aspects: [
+      { label: 'A. Desain Fisik dan Kualitas Komponen', color: '#0F6E56', items: [
+        'Papan permainan memiliki ukuran proporsional dan mudah digunakan siswa Kelas IV di lapangan PJOK',
+        'Bahan papan permainan cukup kuat (ketahanan bahan) dan tahan lama untuk penggunaan berulang',
+        'Kartu instruksi gerak memiliki ukuran yang mudah digenggam dan dibaca siswa',
+        'Pion/bidak memiliki ukuran, bentuk, dan warna yang mudah dibedakan antar kelompok',
+        'Seluruh komponen tersimpan dalam kemasan (box) yang rapi, kokoh, dan portabel',
+        'Kelengkapan komponen (papan, kartu, pion, dadu, panduan) tersedia secara utuh',
+      ]},
+      { label: 'B. Komunikasi Visual dan Estetika', color: '#0F6E56', items: [
+        'Tata letak (layout) papan permainan teratur dan tidak membingungkan pengguna',
+        'Kombinasi warna menarik, harmonis, dan kontras namun tidak mengganggu keterbacaan',
+        'Ilustrasi gerakan pada kartu jelas, proporsional, dan merepresentasikan gerak yang dimaksud',
+        'Tipografi (jenis, ukuran, keterbacaan huruf) sesuai untuk dibaca siswa Kelas IV SD',
+        'Ikon, simbol, dan penanda kotak pada papan konsisten dan mudah dipahami',
+        'Desain keseluruhan menarik dan membangun motivasi belajar sejak pertama kali dilihat',
+      ]},
+      { label: 'C. Prinsip Gamifikasi dan Mekanik Permainan', color: '#0F6E56', items: [
+        'Elemen gamifikasi (sistem poin, tingkat kesulitan berjenjang, tantangan, penghargaan) terimplementasi konsisten',
+        'Sistem poin memotivasi siswa berpartisipasi aktif dan berkompetisi secara sehat',
+        'Alur permainan logis, terstruktur, dan dapat diselesaikan dalam satu sesi PJOK (±40 menit)',
+        'Mekanisme kartu tantangan gerak terintegrasi secara alami dalam alur permainan',
+        'Aturan permainan sederhana dan dapat dipahami siswa Kelas IV SD dalam waktu singkat',
+      ]},
+      { label: 'D. Kemudahan Penggunaan dan Penyimpanan', color: '#0F6E56', items: [
+        'Panduan ditulis dalam bahasa yang jelas dan dapat dipahami langsung oleh guru PJOK',
+        'Persiapan dan pemasangan media (set-up) dapat dilakukan dalam waktu singkat (±5 menit)',
+        'Media dapat digunakan secara fleksibel di berbagai kondisi lapangan PJOK',
+        'Jumlah pemain per kelompok (4–6 siswa) optimal untuk satu guru PJOK',
+        'Komponen mudah dibersihkan dan kemudahan penyimpanan memadai untuk memperpanjang usia pakai',
+        'Media dilengkapi lembar observasi gerak yang mudah digunakan untuk peer assessment',
+      ]},
+      { label: 'E. Keamanan dan Kelayakan', color: '#0F6E56', items: [
+        'Material seluruh komponen aman digunakan siswa (tidak ada sudut tajam, bahan tidak berbahaya)',
+        'Tidak ada unsur desain yang berpotensi memancing perilaku tidak sportif antar siswa',
+        'Ukuran dan bobot total media tidak menyulitkan guru membawa dan menyimpannya di sekolah',
+      ]},
+    ]
+  },
+  guru: {
+    total: 20,
+    aspects: [
+      { label: 'A. Relevansi dengan Tujuan Pembelajaran PJOK', color: '#784212', items: [
+        'Media board game sesuai dengan CP PJOK Fase B gerak non-lokomotor (BSKAP 046/2025)',
+        'Media memfasilitasi kompetensi kognitif: mengenal dan membedakan gerak non-lokomotor',
+        'Media memfasilitasi kompetensi psikomotor: mempraktikkan gerak non-lokomotor dengan benar',
+        'Media mendukung pendekatan deep learning (Joyful, Meaningful, Mindful) Kurikulum Merdeka',
+        'Materi sesuai dengan tingkat perkembangan kognitif dan motorik siswa Kelas IV SD',
+      ]},
+      { label: 'B. Kemudahan Pengelolaan Media', color: '#784212', items: [
+        'Panduan penggunaan mudah saya pahami dan langsung dapat diimplementasikan',
+        'Persiapan dan pemasangan komponen media (set-up) dapat dilakukan secara efisien',
+        'Saya dapat mengelola jalannya permainan 4–6 siswa per kelompok secara bersamaan',
+        'Media dapat digunakan secara fleksibel di lapangan indoor maupun outdoor',
+        'Pengelolaan kelas selama penggunaan media tidak menambah beban saya secara signifikan',
+      ]},
+      { label: 'C. Kesesuaian Alokasi Waktu dengan Jam PJOK', color: '#784212', items: [
+        'Durasi satu sesi permainan (±40 menit) sesuai dengan alokasi jam pelajaran PJOK',
+        'Waktu memahami aturan main di awal tidak memotong terlalu banyak waktu efektif',
+        'Waktu tersedia cukup bagi seluruh siswa mendapat giliran bermain minimal satu kali',
+        'Media mudah dihentikan dan dilanjutkan di sesi berikutnya jika waktu habis',
+      ]},
+      { label: 'D. Kualitas Fisik dan Kemudahan Penyimpanan', color: '#784212', items: [
+        'Kualitas fisik seluruh komponen memadai untuk digunakan secara berulang',
+        'Ukuran dan bobot total media proporsional dan mudah disimpan di sekolah',
+        'Tampilan visual (warna, ilustrasi, tipografi) menarik dan sesuai untuk siswa Kelas IV SD',
+      ]},
+      { label: 'E. Manfaat dan Rekomendasi', color: '#784212', items: [
+        'Saya mengamati peningkatan keterlibatan aktif siswa selama pembelajaran menggunakan media ini',
+        'Media ini layak direkomendasikan kepada rekan guru PJOK lain',
+      ]},
+    ]
+  },
+  siswa: {
+    total: 16,
+    aspects: [
+      { label: 'A. Kemenarikan Tampilan Media', color: '#3C3489', items: [
+        'Tampilan papan permainan board game menarik dan membuat aku ingin segera memainkannya',
+        'Warna dan gambar pada kartu gerakan menarik, cerah, dan enak dilihat',
+        'Ukuran dan bentuk kartu gerakan mudah aku pegang dan baca',
+        'Secara keseluruhan, media board game lebih menarik dibandingkan cara belajar PJOK biasanya',
+      ]},
+      { label: 'B. Kejelasan Instruksi Permainan', color: '#3C3489', items: [
+        'Aturan permainan mudah aku mengerti sejak pertama kali dijelaskan',
+        'Perintah gerakan pada kartu mudah aku baca dan pahami tanpa perlu bertanya kepada guru',
+        'Gambar ilustrasi gerakan pada kartu membantu aku memahami gerakan yang harus dilakukan',
+        'Cara menilai gerakan teman menggunakan lembar penilaian mudah aku lakukan',
+      ]},
+      { label: 'C. Kemudahan Penggunaan Media', color: '#3C3489', items: [
+        'Aku bisa mengikuti permainan dengan lancar tanpa terus-menerus minta bantuan guru',
+        'Jumlah pemain dalam satu kelompok (4–6 orang) terasa nyaman dan tidak terlalu ramai',
+        'Waktu bermain terasa cukup dan tidak terburu-buru dalam menyelesaikan satu sesi permainan',
+      ]},
+      { label: 'D. Kesenangan dan Motivasi Selama Bermain', color: '#3C3489', items: [
+        'Aku merasa senang dan menikmati setiap babak permainan dari awal sampai selesai',
+        'Sistem poin dalam permainan membuat aku semangat melakukan gerakan dengan lebih baik',
+        'Aku merasa bersemangat dan tidak bosan selama mengikuti permainan ini',
+        'Aku ingin memainkan board game ini lagi di pelajaran PJOK berikutnya',
+        'Bermain board game ini membuat aku lebih aktif bergerak dibanding pelajaran PJOK biasa',
+      ]},
+    ]
+  }
+};
+
+// ══════════════════════════════════════════════════════════════════
+// RENDER QUESTIONS
+// ══════════════════════════════════════════════════════════════════
+function renderForm(formKey) {
+  const inst = INSTRUMENTS[formKey];
+  if (!inst) return;
+  const container = document.getElementById(formKey === 'ahli_materi' ? 'mat_questions' :
+                                             formKey === 'ahli_media' ? 'med_questions' :
+                                             formKey === 'guru' ? 'guru_questions' : 'sis_questions');
+  if (!container) return;
+  let num = 1;
+  let html = '';
+  inst.aspects.forEach((aspect) => {
+    html += `<div class="card">
+      <div class="aspect-hdr" style="background:${aspect.color}18;border-left:4px solid ${aspect.color}">
+        <span class="asp-name" style="color:${aspect.color}">${aspect.label}</span>
+      </div>`;
+    aspect.items.forEach((item) => {
+      const n = num++;
+      html += `<div class="q-row">
+        <div class="q-num">${n}</div>
+        <div class="q-text">${item}</div>
+        <div class="q-scale">
+          ${[1,2,3,4].map(v=>`<label>
+            <input type="radio" name="${formKey}_q${n}" value="${v}" onchange="updateProgress('${formKey}')">
+            ${v}
+          </label>`).join('')}
+        </div>
+      </div>`;
+    });
+    html += `</div>`;
+  });
+  container.innerHTML = html;
+}
+
+function updateProgress(formKey) {
+  const inst = INSTRUMENTS[formKey];
+  const prefix = formKey === 'ahli_materi' ? 'mat' :
+                 formKey === 'ahli_media' ? 'med' :
+                 formKey === 'guru' ? 'guru' : 'sis';
+  let filled = 0;
+  for (let i = 1; i <= inst.total; i++) {
+    if (document.querySelector(`input[name="${formKey}_q${i}"]:checked`)) filled++;
+  }
+  const pct = Math.round(filled / inst.total * 100);
+  document.getElementById(`${prefix}_progress_lbl`).textContent = `${filled} dari ${inst.total} butir diisi`;
+  document.getElementById(`${prefix}_progress_fill`).style.width = pct + '%';
+}
+
+// ══════════════════════════════════════════════════════════════════
+// COLLECT DATA
+// ══════════════════════════════════════════════════════════════════
+function collectFormData(formKey) {
+  const inst = INSTRUMENTS[formKey];
+  const scores = {};
+  for (let i = 1; i <= inst.total; i++) {
+    const el = document.querySelector(`input[name="${formKey}_q${i}"]:checked`);
+    scores[`Q${i}`] = el ? parseInt(el.value) : null;
+  }
+  const now = new Date().toISOString();
+
+  const base = { form_type: formKey, timestamp: now };
+
+  if (formKey === 'ahli_materi') Object.assign(base, {
+    nama: document.getElementById('mat_nama').value,
+    institusi: document.getElementById('mat_inst').value,
+    tanggal: document.getElementById('mat_tgl').value,
+    peran: document.getElementById('mat_peran').value,
+    saran: document.getElementById('mat_saran').value,
+    kesimpulan: document.getElementById('mat_kesimpulan').value,
+  });
+  if (formKey === 'ahli_media') Object.assign(base, {
+    nama: document.getElementById('med_nama').value,
+    institusi: document.getElementById('med_inst').value,
+    tanggal: document.getElementById('med_tgl').value,
+    urutan: document.getElementById('med_urutan').value,
+    saran: document.getElementById('med_saran').value,
+    kesimpulan: document.getElementById('med_kesimpulan').value,
+  });
+  if (formKey === 'guru') Object.assign(base, {
+    nama: document.getElementById('guru_nama').value,
+    sekolah: document.getElementById('guru_sek').value,
+    tanggal: document.getElementById('guru_tgl').value,
+    pengalaman: document.getElementById('guru_pengalaman').value,
+    kelebihan: document.getElementById('guru_kelebihan').value,
+    kendala: document.getElementById('guru_kendala').value,
+    saran: document.getElementById('guru_saran').value,
+  });
+  if (formKey === 'siswa') Object.assign(base, {
+    nama: document.getElementById('sis_nama').value,
+    absen: document.getElementById('sis_absen').value,
+    sekolah: document.getElementById('sis_sek').value,
+    tanggal: document.getElementById('sis_tgl').value,
+    suka: document.getElementById('sis_suka').value,
+    sulit: document.getElementById('sis_sulit').value,
+  });
+
+  return { ...base, ...scores };
+}
+
+function validateForm(formKey) {
+  const inst = INSTRUMENTS[formKey];
+  let missing = 0;
+  for (let i = 1; i <= inst.total; i++) {
+    if (!document.querySelector(`input[name="${formKey}_q${i}"]:checked`)) missing++;
+  }
+  if (missing > 0) return `Masih ada ${missing} butir belum diisi.`;
+  return null;
+}
+
+// ══════════════════════════════════════════════════════════════════
+// SUBMIT
+// ══════════════════════════════════════════════════════════════════
+async function submitForm(formKey) {
+  const statusId = { ahli_materi:'mat_status', ahli_media:'med_status', guru:'guru_status', siswa:'sis_status' }[formKey];
+  const statusEl = document.getElementById(statusId);
+
+  const err = validateForm(formKey);
+  if (err) {
+    statusEl.className = 'status-box error';
+    statusEl.style.display = 'block';
+    statusEl.textContent = '⚠️ ' + err;
+    statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    return;
+  }
+
+  const data = collectFormData(formKey);
+
+  // Save local
+  if (CONFIG.USE_LOCAL) {
+    const key = 'kuesioner_data';
+    const existing = JSON.parse(localStorage.getItem(key) || '[]');
+    existing.push(data);
+    localStorage.setItem(key, JSON.stringify(existing));
+  }
+
+  // Send to GAS
+  if (CONFIG.GAS_URL) {
+    statusEl.className = 'status-box';
+    statusEl.style.display = 'block';
+    statusEl.innerHTML = '<span class="spinner"></span>Mengirim data ke Google Sheets...';
+    try {
+      await fetch(CONFIG.GAS_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data)
+      });
+      statusEl.className = 'status-box success';
+      statusEl.innerHTML = '✅ Data berhasil dikirim ke Google Sheets! Terima kasih.';
+    } catch(e) {
+      statusEl.className = 'status-box error';
+      statusEl.innerHTML = '⚠️ Gagal kirim ke Sheets, tapi data tersimpan lokal. Cek koneksi internet.';
+    }
+  } else {
+    statusEl.className = 'status-box success';
+    statusEl.innerHTML = '✅ Data tersimpan lokal sebagai backup.';
+  }
+  statusEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+}
+
+// ══════════════════════════════════════════════════════════════════
+// DATA VIEW
+// ══════════════════════════════════════════════════════════════════
+function renderDataView() {
+  const filter = document.getElementById('dv_filter').value;
+  const all = JSON.parse(localStorage.getItem('kuesioner_data') || '[]');
+  const data = filter === 'all' ? all : all.filter(d => d.form_type === filter);
+  const wrap = document.getElementById('dv_table_wrap');
+  if (!data.length) { wrap.innerHTML = '<div class="empty-state">Belum ada data untuk filter ini.</div>'; return; }
+
+  const badgeMap = { ahli_materi:'b-mat', ahli_media:'b-med', guru:'b-guru', siswa:'b-sis' };
+  const labelMap = { ahli_materi:'Ahli Materi', ahli_media:'Ahli Media', guru:'Guru PJOK', siswa:'Siswa' };
+
+  // Find all Q columns
+  const qCols = [];
+  data.forEach(d => Object.keys(d).filter(k=>k.startsWith('Q')).forEach(k=>{ if(!qCols.includes(k)) qCols.push(k); }));
+  qCols.sort((a,b)=>parseInt(a.slice(1))-parseInt(b.slice(1)));
+
+  let html = `<table><thead><tr>
+    <th>#</th><th>Form</th><th>Nama</th><th>Tanggal</th>
+    ${qCols.map(q=>`<th>${q}</th>`).join('')}
+    <th>Total</th><th>Rerata</th>
+  </tr></thead><tbody>`;
+
+  data.forEach((d, i) => {
+    const scores = qCols.map(q => parseInt(d[q]) || 0);
+    const total = scores.reduce((a,b)=>a+b, 0);
+    const avg = scores.length ? (total/scores.length).toFixed(2) : '-';
+    html += `<tr>
+      <td>${i+1}</td>
+      <td><span class="badge ${badgeMap[d.form_type]||''}">${labelMap[d.form_type]||d.form_type}</span></td>
+      <td>${d.nama||'-'}</td>
+      <td>${(d.tanggal||d.timestamp||'').slice(0,10)}</td>
+      ${qCols.map(q=>`<td>${d[q]||'-'}</td>`).join('')}
+      <td><strong>${total}</strong></td>
+      <td><strong>${avg}</strong></td>
+    </tr>`;
+  });
+  html += `</tbody></table>`;
+  wrap.innerHTML = html;
+}
+
+function exportCSV() {
+  const filter = document.getElementById('dv_filter').value;
+  const all = JSON.parse(localStorage.getItem('kuesioner_data') || '[]');
+  const data = filter === 'all' ? all : all.filter(d => d.form_type === filter);
+  if (!data.length) { alert('Tidak ada data untuk diekspor.'); return; }
+
+  // Build all keys
+  const keys = [];
+  data.forEach(d => Object.keys(d).forEach(k=>{ if(!keys.includes(k)) keys.push(k); }));
+
+  const csv = [
+    keys.join(','),
+    ...data.map(d => keys.map(k => {
+      const v = d[k] === undefined ? '' : String(d[k]);
+      return v.includes(',') || v.includes('"') ? `"${v.replace(/"/g,'""')}"` : v;
+    }).join(','))
+  ].join('\n');
+
+  const blob = new Blob(['\uFEFF'+csv], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = `kuesioner_${filter}_${new Date().toISOString().slice(0,10)}.csv`;
+  a.click(); URL.revokeObjectURL(url);
+}
+
+function clearData() {
+  if (confirm('Hapus semua data lokal? Aksi ini tidak bisa dibatalkan.')) {
+    localStorage.removeItem('kuesioner_data');
+    renderDataView();
+  }
+}
+
+// ══════════════════════════════════════════════════════════════════
+// TABS
+// ══════════════════════════════════════════════════════════════════
+function switchTab(key) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.form-panel').forEach(p => p.classList.remove('active'));
+  document.querySelector(`.tab[data-form="${key}"]`).classList.add('active');
+  document.getElementById(`panel_${key}`).classList.add('active');
+  if (key === 'data_view') renderDataView();
+}
+
+// ══════════════════════════════════════════════════════════════════
+// INIT
+// ══════════════════════════════════════════════════════════════════
+renderForm('ahli_materi');
+renderForm('ahli_media');
+renderForm('guru');
+renderForm('siswa');
+
+// Form siap digunakan
+</script>
+</body>
+</html>
